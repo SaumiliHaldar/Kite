@@ -1,6 +1,5 @@
 import React from 'react';
-import { SignInButton } from '@clerk/clerk-react';
-import { Sparkles, MessageSquareShare } from 'lucide-react';
+import { MessageSquareShare } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   return (
@@ -16,15 +15,7 @@ export const Navbar: React.FC = () => {
           </span>
         </div>
 
-        {/* Single CTA Button */}
-        <div className="flex items-center gap-4">
-          <SignInButton mode="modal">
-            <button className="relative group overflow-hidden px-5 py-2 rounded-full bg-[#D6EFC1] hover:bg-[#bde4a1] text-[#1E2022] font-semibold text-xs sm:text-sm shadow-xs transition-all duration-300 active:scale-95 cursor-pointer flex items-center gap-1.5">
-              <Sparkles className="w-3.5 h-3.5 fill-[#1E2022]" />
-              <span>Get Started</span>
-            </button>
-          </SignInButton>
-        </div>
+
       </div>
     </header>
   );

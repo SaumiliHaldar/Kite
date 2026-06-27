@@ -1,6 +1,7 @@
 from datetime import datetime, timezone
 import os
 import time
+import jwt
 from typing import List, Optional
 from beanie import PydanticObjectId
 import cloudinary
@@ -27,21 +28,20 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Security(security),
 ) -> User:
     token = credentials.credentials
-    clerk_secret = os.getenv("CLERK_SECRET_KEY", "sk_test_placeholder")
 
-    if clerk_secret == "sk_test_placeholder" or not clerk_secret.startswith("sk_"):
-        # Dev / Mock Mode: token string is treated directly as clerk_id
+    # Decode JWT (without signature verification for now) to extract the
+    # stable `sub` claim — the real Clerk user ID (e.g. user_2abc123...).
+    # This prevents the rotating-JWT bug where a new session produces a
+    # different raw token string, causing membership lookups to fail.
+    try:
+        payload = jwt.decode(token, options={"verify_signature": False})
+        clerk_id = payload.get("sub") or token
+    except Exception:
+        # Fallback: treat token as direct clerk_id (dev/test mode)
         clerk_id = token
-    else:
-        try:
-            clerk = Clerk(bearer_auth=clerk_secret)
-            clerk_id = token
-        except Exception as e:
-            raise HTTPException(status_code=401, detail=f"Invalid Clerk token: {str(e)}")
 
     user = await User.find_one(User.clerk_id == clerk_id)
     if not user:
-        # Auto-create dev user if not synced yet
         user = User(
             clerk_id=clerk_id,
             username=f"user_{clerk_id[:8]}",
@@ -139,8 +139,24 @@ async def update_my_profile(
     return current_user
 
 
+@router.get("/users/search", tags=["Users"])
+async def search_users(
+    query: str,
+    current_user: User = Depends(get_current_user)
+):
+    """Search users by username (case-insensitive, partial match). Excludes self."""
+    if not query or len(query.strip()) < 1:
+        return []
+    results = await User.find(
+        {"username": {"$regex": query.strip(), "$options": "i"},
+         "clerk_id": {"$ne": current_user.clerk_id}}
+    ).limit(10).to_list()
+    return results
+
+
 @router.get("/users/{user_id}", response_model=User, tags=["Users"])
 async def get_user_by_id(user_id: str):
+
     user = await User.find_one(User.clerk_id == user_id)
     if not user:
         raise HTTPException(status_code=404, detail="User not found")

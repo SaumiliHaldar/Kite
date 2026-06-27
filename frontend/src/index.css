@@ -82,3 +82,23 @@ body {
 .animate-pulse-glow {
   animation: pulseGlow 2.5s ease-in-out infinite;
 }
+
+/* ── Scrollbar ─────────────────────────────────────────────────────────── */
+.kite-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(214, 239, 193, 0.4) transparent;
+}
+.kite-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+.kite-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.kite-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(214, 239, 193, 0.5);
+  border-radius: 999px;
+}
+.kite-scrollbar::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(189, 228, 161, 0.8);
+}
+
